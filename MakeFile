@@ -1,0 +1,80 @@
+CC     = gcc
+CFLAGS = -Wall -Wextra -std=c99 -g -Isrc
+
+ifeq ($(TEXT_ONLY),1)
+    CFLAGS  += -DTEXT_ONLY
+    LDFLAGS  =
+else
+    SDL_CF  := $(shell sdl2-config --cflags 2>/dev/null)
+    SDL_LF  := $(shell sdl2-config --libs   2>/dev/null)
+    CFLAGS  += $(SDL_CF)
+    LDFLAGS  = $(SDL_LF) -lm
+endif
+
+SRCDIR  = src
+BINDIR  = bin
+TESTDIR = test
+
+SRCS = \
+    $(SRCDIR)/board.c  \
+    $(SRCDIR)/move.c   \
+    $(SRCDIR)/rules.c  \
+    $(SRCDIR)/fileio.c \
+    $(SRCDIR)/ai.c     \
+    $(SRCDIR)/main.c
+
+ifneq ($(TEXT_ONLY),1)
+    SRCS += $(SRCDIR)/gui.c
+endif
+
+OBJS   = $(SRCS:.c=.o)
+TARGET = $(BINDIR)/chess
+
+.PHONY: all clean test tar
+
+all: $(BINDIR) $(TARGET)
+
+$(BINDIR):
+	mkdir -p $(BINDIR)
+
+$(TARGET): $(OBJS)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+	@echo "Built: $@"
+
+$(SRCDIR)/%.o: $(SRCDIR)/%.c $(SRCDIR)/chess.h $(SRCDIR)/board.h
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+TEST_BD = $(BINDIR)/test_boarddisplay
+TEST_RC = $(BINDIR)/test_rulecheck
+
+test: $(BINDIR) $(TEST_BD) $(TEST_RC)
+	@echo ""
+	@echo "--- test_boarddisplay ---"
+	$(TEST_BD)
+	@echo ""
+	@echo "--- test_rulecheck ---"
+	$(TEST_RC)
+	@echo ""
+	@echo "All tests complete."
+
+$(TEST_BD): $(TESTDIR)/test_boarddisplay.c \
+            $(SRCDIR)/board.c $(SRCDIR)/move.c
+	$(CC) $(CFLAGS) -o $@ $^
+	@echo "Built: $@"
+
+$(TEST_RC): $(TESTDIR)/test_rulecheck.c \
+            $(SRCDIR)/board.c $(SRCDIR)/move.c $(SRCDIR)/rules.c
+	$(CC) $(CFLAGS) -o $@ $^
+	@echo "Built: $@"
+
+clean:
+	rm -f $(SRCDIR)/*.o
+	rm -f $(BINDIR)/chess \
+	      $(BINDIR)/test_boarddisplay \
+	      $(BINDIR)/test_rulecheck
+	@echo "Clean done."
+
+tar: clean
+	tar czf ../Chess_Alpha_src.tar.gz \
+	    README COPYRIGHT INSTALL Makefile src/ test/ doc/ bin/
+	@echo "Created Chess_Alpha_src.tar.gz"

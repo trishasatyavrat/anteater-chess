@@ -5,7 +5,7 @@ int handle_en_passant(struct GameState *gs, struct Pos from, struct Pos to)
     if (!p || p->type != PAWN)
         return 0;
 
-    /* Must move to en passant target */
+    // moves to en passant target
     if (to.r == gs->en_passant_target.r &&
         to.f == gs->en_passant_target.f) {
 

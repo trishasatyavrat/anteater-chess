@@ -197,12 +197,12 @@ int possible_moves(struct GameState *gs, struct Move m)
 				if(p->color == WHITE && m.from.r == 0 && m.from.f == 5)
 				{
 					if(m.to.f == 7 && gs->white_castle_k && !gs->board[0][6] && !gs->board[0][7] && !gs->board[0][8]) return 1;
-					if(m.to.f == 3 && gs->white_castle_k && !gs->board[0][4] &&  !gs->board[0][3] && !gs->board[0][2] && !gs->board[0][1]) return 1;
+					if(m.to.f == 3 && gs->white_castle_q && !gs->board[0][4] &&  !gs->board[0][3] && !gs->board[0][2] && !gs->board[0][1]) return 1;
 				} else if(p->color == BLACK && m.from.r == 7 && m.from.f == 5)
-                                       	{
-                                               	if(m.to.f == 7 && gs->black_castle_k && !gs->board[7][6] && !gs->board[7][7] && !gs->board[7][8]) return 1;
-                                                if(m.to.f == 3 && gs->black_castle_k && !gs->board[7][4] &&  !gs->board[7][3] && !gs->board[7][2] && !gs->board[7][1]) return 1;
-					}
+                {
+                	if(m.to.f == 7 && gs->black_castle_k && !gs->board[7][6] && !gs->board[7][7] && !gs->board[7][8]) return 1;
+                    if(m.to.f == 3 && gs->black_castle_q && !gs->board[7][4] &&  !gs->board[7][3] && !gs->board[7][2] && !gs->board[7][1]) return 1;
+				}
 			}
 			return 0;
 		case BISHOP: if(adr != adf) return 0;  break;

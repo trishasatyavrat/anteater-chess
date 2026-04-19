@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-//is there a step being made?
+//is there a step being made
 static int is_step(int from, int to)
 {
 	if(from == to) return 0; //a PIECE cannot make a MOVE to the SAME position

@@ -7,7 +7,7 @@
 int is_under_attack(struct GameState *gs, struct Pos p, enum PieceColor op_color);
 //op = opponent/attacker
 
-//Is the King in Check? (Is color specific)
+//Is the King in Check (Is color specific)
 int king_in_check(struct GameState *gs, enum PieceColor color);
 
 //Is this Move Possible Given the Anteater Chess rules? (has to be LEGAL)

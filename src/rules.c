@@ -3,7 +3,41 @@
 #include <stdlib.h>
 #include <math.h>
 
-//create a copy of the current board (checking moves without disturbing the acutal game)
+//if there a step being made?
+static int is_step(int from, int to)
+{
+	if(from == to) return 0; //a PIECE cannot make a MOVE to the SAME position
+	return (to > from) ? 1: -1;
+	//a 1 -> RIGHT or UP
+	//a -1 -> LEFT or DOWN
+}//end of is_step FUNCTION
+
+static int is_path_clear(struct GameState *gs, struct Pos from, struct Pos to)
+{
+ 	int dir_r = is_step(from.r, to.r); //direction of the RANK
+	int dir_f = is_step(from.f, to.f); //direction of the FILE
+
+	//CHECK if the position closest to the PIECE is occupied
+	int r = from.r + dir_r;
+	int f = from.f + dir_f;
+
+	//Continue checking until the desired position is checked
+	while (r != to.r || f != to.f)
+	{
+		if(gs->board[r][f])
+		//if there's a PIECE in that position, the path is BLOCKED
+		{
+			return 0; //not CLEAR
+		}
+		//increment the position if needed
+		r += dir_r;
+		f += dir_f;
+	}
+
+	return 1; //if the PATH is cleared
+}//end of is_path_clear FUNCTION
+
+//create a copy of the current board (checking moves without disturbing the actual game)
 static struct GameState copy_of_board(struct GameState *gs)
 {
 	struct GameState copy = *gs;
@@ -40,73 +74,8 @@ static void clear_board_copy(struct GameState *copy)
 				free(copy->board[r][f]);
 			}//end of IF statement
 		}//end of FOR (file) loop
-	}//end of FOR (rank) looop
-}//end of clear_board_copy FUNCTION
-
-int is_under_attack(struct GameState *gs, struct Pos p, enum PieceColor op_color)
-{
-	struct Piece *target_piece = lookup_piece(gs->board, p);
-	for (int r = 0; r < NUM_RANKS; r++)
-	{
-		for (int f = 0; f < NUM_FILES; f++)
-		{
-			struct Piece *op = gs->board[r][f];//examines a POSITION
-			//if the POSITION = NULL or the PIECE is the WRONG color move on to the next POSITION
-			if(!op || op->color != op_color) continue;
-
-			//an ANTEATER can't attack the KING
-
-			int dr = p.r - r;
-			int df = p.f - f;
-			int adr = abs(dr);
-			int adf = abs(df);
-
-			switch(op->type)
-			{
-				case PAWN:
-					if(op_color == WHITE && dr == 1 && adf == 1) return 1;
-					if(op_color == BLACK && dr == -1 && adf == 1) return 1;
-					break;
-				case KNIGHT:
-					if((adr == 2 && adf == 1) || (adr == 1 && adf == 2)) return 1;
-					break;
-				case KING:
-					if(adr <= 1 && adf <= 1) return 1;
-					break;
-				case ANTEATER:
-					if(target_piece && target_piece->type == PAWN && adr <= 1 && adf <= 1) return 1;
-                                        break;
-				case BISHOP:
-				case ROOK:
-				case QUEEN:
-					if(op->type == BISHOP && adr != adf) break;
-					if (op->type == ROOK && adr != 0 && adf != 0) break;
-					if (op->type == QUEEN && adr != adf && adr != 0 && adf != 0) break;
-
-					int step_r = (dr == 0) ? 0:(dr > 0 ? 1 : -1);
-					int step_f = (df == 0) ? 0:(df > 0 ? 1 : -1);
-					int cr = r + step_r;
-					int cf = f + step_f;
-					int blocked = 0;
-
-					while (cr != p.r || cf != p.f)
-					{
-						if (gs->board[cr][cf])
-						{
-							blocked = 1;
-							break;
-						}
-						cr += step_r;
-						cf += step_f;
-					}//end of WHILE loop
-
-					if (!blocked) return 1;
-					break;
-			}//end of SWITCH statements
-		}//end of FOR (file) loop
 	}//end of FOR (rank) loop
-	return 0;
-}//end of is_under_attack FUNCTION
+}//end of clear_board_copy FUNCTION
 
 int king_in_check(struct GameState *gs, enum PieceColor color)
 {
@@ -136,38 +105,39 @@ int king_in_check(struct GameState *gs, enum PieceColor color)
 int possible_moves(struct GameState *gs, struct Move m)
 {
 	struct Piece *p = lookup_piece(gs->board, m.from);
-	//LoopUp the piece and it's starting position
-	if(!p) return 0; //if there is NO Pieces at the starting POSITION, a move is NOT POSSIBLE
+	//LookUp the piece and its starting position
+	if(!p) return 0; //if there is NO PIECE at the starting POSITION, a move is NOT POSSIBLE
 	if(m.from.r == m.to.r && m.from.f == m.to.f) return 0;
 	//NOT Possible to move to the SAME Square
 
 	struct Piece *target = lookup_piece(gs->board, m.to);
 	//LoopUp the piece at the desired position
 	if (target && target->color == p->color) return 0;
-	//if theres a PIECE of the same COLOR, move NOT POSSIBLE
+	//if there's a PIECE of the same COLOR, move NOT POSSIBLE
 	
-	int dr = m.to.r - m.from.r;
-	int df = m.to.f - m.from.f;
-	int adr = abs(dr);
-	int adf = abs(df);
+	int dis_moved_r = m.to.r - m.from.r; //distance a PIECE moved (ROW)
+	int dis_moved_f = m.to.f - m.from.f; //distance a PIECE moved (FILE)
+	int adr = abs(dis_moved_r); //absolute value of distance moved (ROW) ignores direction (UP or DOWN)
+	int adf = abs(dis_moved_f); //absolute value of distance moved (FILE) ignores direction
 
 	switch (p->type)
 	{
 		case PAWN:
 			{
-				int dir = (p->color == WHITE) ? 1: -1;
-				int start_rank = (p->color == WHITE) ? 1: 6;
+				int dir = (p->color == WHITE) ? 1: -1; //direction of the PIECE (UP -> WHITE, DOWN -> BLACK)
+				int start_rank = (p->color == WHITE) ? 1: 6; //the starting POSITION of a PAWN/ANT
+				//it should be WHITE RANK -> 1, BLACK RANK -> 6 on the board
 
-				if (df == 0)
+				if (dis_moved_f == 0)
 				{
-					if(dr == dir && !target) return 1;
-					if(dr == 2 * dir && m.from.r == start_rank && !target)
+					if(dis_moved_r == dir && !target) return 1;
+					if(dis_moved_r == 2 * dir && m.from.r == start_rank && !target)
 					{
 						struct Pos mid = make_pos(m.from.r + dir, m.from.f);
 						if (!lookup_piece(gs->board, mid)) return 1;
 					}
 				}
-				if (adf == 1 && dr == dir)
+				if (adf == 1 && dis_moved_r == dir)
 				{
 					if(target) return 1;
 					if (m.to.r == gs->en_passant_target.r && m.to.f == gs->en_passant_target.f) return 1;
@@ -205,14 +175,39 @@ int possible_moves(struct GameState *gs, struct Move m)
 				}
 			}
 			return 0;
-		case BISHOP: if(adr != adf) return 0;  break;
-		case ROOK: if(adr != 0 && adf !=0) return 0;  break;
-		case QUEEN: if(adr != adf && adr != 0 && adf !=0) return 0; break;
+		case BISHOP: 
+			if(adr == adf)
+			{
+				if(is_path_clear(gs, m.from, m.to))
+				{
+					return 1;
+				}
+			}
+			return 0;
+		case ROOK: 
+			if(dis_moved_r == 0 || dis_moved_f ==0) 
+			{
+				if(is_path_clear(gs, m.from, m.to))
+				{
+					return 1;
+				}
+			}
+			return 0;
+		case QUEEN: 
+			if(adr == adf || dis_moved_r == 0 || dis_moved_f ==0) 
+			{
+				if(is_path_clear(gs, m.from, m.to))
+				{
+					return 1;
+				}
+			}
+			return 0;
+		default: printf("default case.") return 0;
 	}//end of CASE statements
 
 	//Checking the Path to see if it's clear
-	int path_r = (dr == 0) ? 0: (dr > 0 ? 1: -1);
-	int path_f = (df == 0) ? 0: (dr > 0 ? 1: -1);
+	int path_r = (dis_moved_r == 0) ? 0: (dis_moved_r > 0 ? 1: -1);
+	int path_f = (dis_moved_f == 0) ? 0: (dis_moved_r > 0 ? 1: -1);
 	int r = m.from.r + path_r;
 	int f = m.from.f + path_f;
 	while (r != m.to.r || f!= m.to.f)
@@ -224,6 +219,25 @@ int possible_moves(struct GameState *gs, struct Move m)
 	return 1;
 }//end of possible_moves FUNCTION
 
+int is_under_attack(struct GameState *gs, struct Pos p, enum PieceColor op_color)
+{
+	//LOOP the ENTIRE Board
+	for (int r = 0; r < NUM_RANKS; r++)
+	{
+		for (int f = 0; f < NUM_FILES; f++)
+		{
+			struct Piece *op = gs->board[r][f];//examines a POSITION
+			//if the POSITION = NULL or the PIECE is the WRONG color move on to the next POSITION
+			if(!op || op->color != op_color)
+			{
+				struct Mobe m = {.from = make_pos(r,f), .to = p}
+				if(possible_moves(gs, m)) return 1;
+			}
+		}//end of FOR (file) loop
+	}//end of FOR (rank) loop
+	return 0; //position is SAFE
+}//end of is_under_attack FUNCTION
+
 int is_legal_move(struct GameState *gs, struct Move m)
 {
 	if(!pos_valid(m.from) || !pos_valid(m.to)) return 0;
@@ -234,10 +248,9 @@ int is_legal_move(struct GameState *gs, struct Move m)
 	//check CASTLING
 	if(p->type ==KING && abs(m.from.f - m.to.f) >= 2)
 	{
-		int move = (m.to.f > m.from.f) ? 1 : -1;
-		struct Pos pass_sq = make_pos(m.from.r, m.from.f + move);
-		if (is_under_attack(gs, pass_sq, OPPONENT(p->color))) return 0;
+		if (is_under_attack(gs, make_pos(m.from.r,m.from.f + step), OPPONENT(p->color))) return 0;
 		if(king_in_check(gs, p->color)) return 0;
+		int step = is_step(m.from, m.to.f);
 	}
 
 	struct GameState copy = copy_of_board(gs);

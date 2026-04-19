@@ -169,7 +169,7 @@ int possible_moves(struct GameState *gs, struct Move m)
 					//all positions from the KING to the ROOK have to be EMPTY
 					//the flag for CASTLING has to be active
 					if(m.to.f == 7 && gs->white_castle_k && !gs->board[0][6] && !gs->board[0][7] && !gs->board[0][8]) return 1;
-					if(m.to.f == 3 && gs->white_castle_q && !gs->board[0][4] &&  !gs->board[0][3] && !gs->board[0][2] && !gs->board[0][1]) return 1;
+					if(m.to.f == 3 && gs->white_castle_q && !gs->board[0][4] && !gs->board[0][3] && !gs->board[0][2] && !gs->board[0][1]) return 1;
 				} else if(p->color == BLACK && m.from.r == 7 && m.from.f == 5)
                 {
                 	if(m.to.f == 7 && gs->black_castle_k && !gs->board[7][6] && !gs->board[7][7] && !gs->board[7][8]) return 1;
@@ -204,7 +204,8 @@ int possible_moves(struct GameState *gs, struct Move m)
 				}
 			}
 			return 0;
-		default: printf("default case."); return 0;
+		default: printf("default case."); 
+			return 0;
 	}//end of CASE statements
 }//end of possible_moves FUNCTION
 
@@ -240,32 +241,39 @@ int is_legal_move(struct GameState *gs, struct Move m)
 	if(p->type ==KING && abs(m.from.f - m.to.f) >= 2)
 	{
 		if(king_in_check(gs, p->color)) return 0; //is the KING in check?
-		int step = is_step(m.from, m.to.f);
-		if(is_under_attack(gs, make_pos(m.from.r,m.from.f + step), OPPONENT(p->color))) return 0;
+		
+		int step = (m.to.f > m.from.f)? 1: -1; //is the King going Short or LONG side?
+		//if the KING is in CHECK, castling is NOT allowed
+		struct Pos jump_sq = make_pos(m.from.r, m.from.f+step);
+		if(is_under_attack(gs, jump_sq, OPPONENT(p->color))) return 0;
 	}
 
-	struct GameState copy = copy_of_board(gs);
-	apply_move(&copy, m);
-	int in_check = king_in_check(&copy, p->color);
-	clear_board_copy(&copy);
+	//Simulation 
+	struct GameState copy = copy_of_board(gs); //create a copy of the current board
+	apply_move(&copy, m); //apply the move
+	int in_check = king_in_check(&copy, p->color); //is the KING in check?
+	clear_board_copy(&copy); //free memory
 
 	return !in_check;
+	//return 1: The King is SAFE and the move is LEGAL
 }//end of is_legal_move FUNCTION
 
 static int any_moves_left(struct GameState *gs, enum PieceColor color)
 {
+	//Looks for POSITIONS throughout the entire board with the current player's piece on it
 	for(int fr = 0; fr < NUM_RANKS; fr++)
 	{
 		for (int ff = 0; ff < NUM_FILES; ff++)
 		{
 			struct Piece *p = gs->board[fr][ff];
-			if(p && p->color == color)
+			if(p && p->color == color) //the POSITION can't be empty AND belongs to the current player
 			{
+				//can these pieces go to ANY OTHER POSITION legally?
 				for(int tr = 0; tr < NUM_RANKS; tr++)
 				{
 					for (int tf = 0; tf < NUM_FILES; tf++)
 					{
-						struct Move m;
+						struct Move m; //variable to test possibilities
 						m.from = make_pos(fr,ff);
 						m.to = make_pos(tr,tf);
 						if(is_legal_move(gs,m)) return 1;
@@ -274,7 +282,7 @@ static int any_moves_left(struct GameState *gs, enum PieceColor color)
 			}//end of if statement
 		}//end of FOR LOOP
 	}//end of FOR Loop
-	return 0;
+	return 0; //Return 0: there are no MOVES left
 }//end of any_moves_left FUNCTION
 
 int king_in_checkmate(struct GameState *gs, enum PieceColor color)

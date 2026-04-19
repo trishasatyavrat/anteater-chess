@@ -128,25 +128,25 @@ int possible_moves(struct GameState *gs, struct Move m)
 				int start_rank = (p->color == WHITE) ? 1: 6; //the starting POSITION of a PAWN/ANT
 				//it should be WHITE RANK -> 1, BLACK RANK -> 6 on the board
 
-				if (dis_moved_f == 0)
+				if (dis_moved_f == 0) //the PAWN can only change RANK except when capturing
 				{
-					if(dis_moved_r == dir && !target) return 1;
-					if(dis_moved_r == 2 * dir && m.from.r == start_rank && !target)
+					if(dis_moved_r == dir && !target) return 1; //Move FORWARD once
+					if(dis_moved_r == 2 * dir && m.from.r == start_rank && !target) //Move FORWARD twice if PAWN is at spawn position
 					{
-						struct Pos mid = make_pos(m.from.r + dir, m.from.f);
-						if (!lookup_piece(gs->board, mid)) return 1;
+						struct Pos mid = make_pos(m.from.r + dir, m.from.f); //the middle position in the PAWN's path
+						if (!lookup_piece(gs->board, mid)) return 1; //if there's a PIECE the PAWN can not move there
 					}
 				}
-				if (adf == 1 && dis_moved_r == dir)
+				if (adf == 1 && dis_moved_r == dir) //if the PAWN is capturing
 				{
-					if(target) return 1;
+					if(target) return 1; //Move is only VALID if there an opposing PIECE
 					if (m.to.r == gs->en_passant_target.r && m.to.f == gs->en_passant_target.f) return 1;
+					//EN PASSANT
 				}
-				return 0;
+				return 0; //return 0 if move NOT possible
 			}//end of PAWN case
 		case ANTEATER:
 			if(adr > 1 || adf > 1) return 0; //Moves like a KING
-
 			if(target && target->type != PAWN) return 0; //can ONLY capture ANTS (PAWNS)
 			return 1;
 		case KNIGHT: //L-shape move
@@ -156,16 +156,18 @@ int possible_moves(struct GameState *gs, struct Move m)
 			}
 			else
 			{
-				return 0;
-			}
+				return 0; //invalid MOVE if it's not an L-shape
+			} //A KNIGHT is allowed to JUMP over PIECES
 		case KING:
-			if (adr <= 1 && adf <=1) return 1;
+			if (adr <= 1 && adf <=1) return 1; //Moves ONE space any direction
 
 			//Castling Check
-			if (adr == 0 && adf >=2)
+			if (adr == 0 && adf >=2) //if the KING wants to castle (moving more than TWO spaces)
 			{
-				if(p->color == WHITE && m.from.r == 0 && m.from.f == 5)
+				if(p->color == WHITE && m.from.r == 0 && m.from.f == 5) //The KING has to be UNMOVED from spawn point
 				{
+					//all positions from the KING to the ROOK have to be EMPTY
+					//the flag for CASTLING has to be active
 					if(m.to.f == 7 && gs->white_castle_k && !gs->board[0][6] && !gs->board[0][7] && !gs->board[0][8]) return 1;
 					if(m.to.f == 3 && gs->white_castle_q && !gs->board[0][4] &&  !gs->board[0][3] && !gs->board[0][2] && !gs->board[0][1]) return 1;
 				} else if(p->color == BLACK && m.from.r == 7 && m.from.f == 5)
@@ -175,25 +177,25 @@ int possible_moves(struct GameState *gs, struct Move m)
 				}
 			}
 			return 0;
-		case BISHOP: //moves diagonally
-			if(adr == adf)
+		case BISHOP: //moves diagonally evenly
+			if(adr == adf) 
 			{
-				if(is_path_clear(gs, m.from, m.to))
+				if(is_path_clear(gs, m.from, m.to)) //checks if the path is NOT Blocked
 				{
 					return 1;
 				}
 			}
 			return 0;
-		case ROOK: 
-			if(dis_moved_r == 0 || dis_moved_f ==0) 
+		case ROOK: //moves in a straight line in all direction (NOT DIAGONALLY)
+			if(dis_moved_r == 0 || dis_moved_f == 0)
 			{
-				if(is_path_clear(gs, m.from, m.to))
+				if(is_path_clear(gs, m.from, m.to)) //make sure PATH is CLEAR
 				{
 					return 1;
 				}
 			}
 			return 0;
-		case QUEEN: 
+		case QUEEN: //straight and diagonally
 			if(adr == adf || dis_moved_r == 0 || dis_moved_f ==0) 
 			{
 				if(is_path_clear(gs, m.from, m.to))

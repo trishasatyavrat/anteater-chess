@@ -262,7 +262,7 @@ static int any_moves_left(struct GameState *gs, enum PieceColor color)
 {
 	//For the calling order in MAIN.c
 	//Variable for the ACTUALL current turn
-	emun PieceColor actual_turn = gs->current_turn;
+	enum PieceColor actual_turn = gs->current_turn;
 	gs->current_turn = color;
 	//Looks for POSITIONS throughout the entire board with the current player's piece on it
 	for(int fr = 0; fr < NUM_RANKS; fr++)

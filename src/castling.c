@@ -6,7 +6,7 @@ void castling_function(struct GameState *gs, struct Move *m)
 	struct Piece *king = lookup_piece(gs->board, m->from);
 	if(!king) return; //if the position does not contain a KING, then CASTLING can't occur
 
-	//for undo_move (lets the function know there were MULTIPLE PIECES moved
+	//for undo_move (lets the function know there were MULTIPLE PIECES moved)
 	m->was_castling = 1;
 	int rank = m->from.r; //the RANK should stay 0 or 7 (black or white edge)
 

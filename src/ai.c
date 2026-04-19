@@ -1,4 +1,5 @@
 #include "ai.h"
+#include "rules.h"
 
 struct Move bestmove_function(struct GameState *gs, enum PieceColor color, int depth){
     struct Move moves[512]; //stores moves

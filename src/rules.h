@@ -22,6 +22,4 @@ int king_in_checkmate(struct GameState *gs, enum PieceColor color);
 //Is the Game in a Statlemate?
 int king_in_stalemate(struct GameState *gs, enum PieceColor color);
 
-//Castling
-int possible_castle(struct GameState *gs, enumPiece color, int side);
-
+#endif

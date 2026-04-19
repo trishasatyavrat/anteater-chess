@@ -45,7 +45,7 @@ static void clear_board_copy(struct GameState *copy)
 
 int is_under_attack(struct GameState *gs, struct Pos p, enum PieceColor op_color)
 {
-	struct Piece *target_piece = lookip_piece(gs->board, p);
+	struct Piece *target_piece = lookup_piece(gs->board, p);
 	for (int r = 0; r < NUM_RANKS; r++)
 	{
 		for (int f = 0; f < NUM_FILES; f++)
@@ -55,7 +55,6 @@ int is_under_attack(struct GameState *gs, struct Pos p, enum PieceColor op_color
 			if(!op || op->color != op_color) continue;
 
 			//an ANTEATER can't attack the KING
-			if (op->type == ANTEATER && king_piece && king_piece->type == KING) continue;
 
 			int dr = p.r - r;
 			int df = p.f - f;
@@ -72,7 +71,7 @@ int is_under_attack(struct GameState *gs, struct Pos p, enum PieceColor op_color
 					if((adr == 2 && adf == 1) || (adr == 1 && adf == 2)) return 1;
 					break;
 				case KING:
-					if(adr <= 1 && adf <= 1) return1;
+					if(adr <= 1 && adf <= 1) return 1;
 					break;
 				case ANTEATER:
 					if(target_piece && target_piece->type == PAWN && adr <= 1 && adf <= 1) return 1;
@@ -263,8 +262,8 @@ static int any_moves_left(struct GameState *gs, enum PieceColor color)
 					for (int tf = 0; tf < NUM_FILES; tf++)
 					{
 						struct Move m;
-						m.from = make_pos(fr.ff);
-						m.to = make_pos(tr.tf);
+						m.from = make_pos(fr,ff);
+						m.to = make_pos(tr,tf);
 						if(is_legal_move(gs,m)) return 1;
 					}//end of FOR loop
 				}//end of FOR loop
@@ -274,7 +273,7 @@ static int any_moves_left(struct GameState *gs, enum PieceColor color)
 	return 0;
 }//end of any_moves_left FUNCTION
 
-int king_in_checkmate(struct GameState *gs, enumPieceColor color)
+int king_in_checkmate(struct GameState *gs, enum PieceColor color)
 {
 	if(!king_in_check(gs, color)) return 0;
 	return !any_moves_left(gs,color);

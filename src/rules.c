@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-//if there a step being made?
+//is there a step being made?
 static int is_step(int from, int to)
 {
 	if(from == to) return 0; //a PIECE cannot make a MOVE to the SAME position
@@ -229,17 +229,19 @@ int is_under_attack(struct GameState *gs, struct Pos p, enum PieceColor op_color
 
 int is_legal_move(struct GameState *gs, struct Move m)
 {
-	if(!pos_valid(m.from) || !pos_valid(m.to)) return 0;
+	if(!pos_valid(m.from) || !pos_valid(m.to)) return 0; //are the POSITIONS actually valid (in bounds)?
 	struct Piece *p = lookup_piece(gs->board, m.from);
-	if(!p || p->color != gs->current_turn) return 0;
+	if(!p || p->color != gs->current_turn) return 0; 
+	//there has to be a PIECE at the position and you cant move the OPPONENTS piece
 	if (!possible_moves(gs,m)) return 0;
+	//if the move doesn't follow BASIC rules, the MOVE is not legal
 
 	//check CASTLING
 	if(p->type ==KING && abs(m.from.f - m.to.f) >= 2)
 	{
-		if (is_under_attack(gs, make_pos(m.from.r,m.from.f + step), OPPONENT(p->color))) return 0;
-		if(king_in_check(gs, p->color)) return 0;
+		if(king_in_check(gs, p->color)) return 0; //is the KING in check?
 		int step = is_step(m.from, m.to.f);
+		if(is_under_attack(gs, make_pos(m.from.r,m.from.f + step), OPPONENT(p->color))) return 0;
 	}
 
 	struct GameState copy = copy_of_board(gs);

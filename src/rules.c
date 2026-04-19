@@ -145,11 +145,11 @@ int possible_moves(struct GameState *gs, struct Move m)
 				return 0;
 			}//end of PAWN case
 		case ANTEATER:
-			if(adr > 1 || adf > 1) return 0;
+			if(adr > 1 || adf > 1) return 0; //Moves like a KING
 
-			if(target && target->type != PAWN) return 0;
+			if(target && target->type != PAWN) return 0; //can ONLY capture ANTS (PAWNS)
 			return 1;
-		case KNIGHT:
+		case KNIGHT: //L-shape move
 			if((adr == 2 && adf == 1) || (adr == 1 && adf == 2))
 			{
 				return 1;
@@ -175,7 +175,7 @@ int possible_moves(struct GameState *gs, struct Move m)
 				}
 			}
 			return 0;
-		case BISHOP: 
+		case BISHOP: //moves diagonally
 			if(adr == adf)
 			{
 				if(is_path_clear(gs, m.from, m.to))
@@ -202,21 +202,8 @@ int possible_moves(struct GameState *gs, struct Move m)
 				}
 			}
 			return 0;
-		default: printf("default case.") return 0;
+		default: printf("default case."); return 0;
 	}//end of CASE statements
-
-	//Checking the Path to see if it's clear
-	int path_r = (dis_moved_r == 0) ? 0: (dis_moved_r > 0 ? 1: -1);
-	int path_f = (dis_moved_f == 0) ? 0: (dis_moved_r > 0 ? 1: -1);
-	int r = m.from.r + path_r;
-	int f = m.from.f + path_f;
-	while (r != m.to.r || f!= m.to.f)
-	{
-		if(gs->board[r][f]) return 0;
-		r += path_r;
-		f += path_f;
-	}
-	return 1;
 }//end of possible_moves FUNCTION
 
 int is_under_attack(struct GameState *gs, struct Pos p, enum PieceColor op_color)
@@ -228,10 +215,10 @@ int is_under_attack(struct GameState *gs, struct Pos p, enum PieceColor op_color
 		{
 			struct Piece *op = gs->board[r][f];//examines a POSITION
 			//if the POSITION = NULL or the PIECE is the WRONG color move on to the next POSITION
-			if(!op || op->color != op_color)
+			if(op && op->color == op_color)//if the position is NOT EMPTY and the color is the OPPOSING team
 			{
-				struct Mobe m = {.from = make_pos(r,f), .to = p}
-				if(possible_moves(gs, m)) return 1;
+				struct Move m = {.from = make_pos(r,f), .to = p};
+				if(possible_moves(gs, m)) return 1; //if the move is possible then the POSITION is under attack
 			}
 		}//end of FOR (file) loop
 	}//end of FOR (rank) loop

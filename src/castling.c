@@ -28,7 +28,7 @@ void castling_function(struct GameState *gs, struct Move *m)
 	struct Piece *rook = lookup_piece(gs->board, m->rook_from);
 	if(rook)
 	{
-		assign_piece(gs->board, rock, m->rook_to); //Moves the ROOK to new location
+		assign_piece(gs->board, rook, m->rook_to); //Moves the ROOK to new location
 		assign_piece(gs->board, NULL, m->rook_from); //Clears the ROOKfrom previous location
 	}
 

@@ -3,6 +3,12 @@
 
 #include "chess.h"
 
+//make a copy of board (uses MALLOC)
+struct GameState copy_of_board(struct GameState *gs);
+
+//clears the MEMORY (required for MALLOC)
+void clear_board_copy(struct GameState *gs);
+
 //Is This Position Under Attack?: this function will be used for CHECK status
 int is_under_attack(struct GameState *gs, struct Pos p, enum PieceColor op_color);
 //op = opponent/attacker

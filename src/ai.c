@@ -162,7 +162,7 @@ int minimax(struct GameState *gs, enum PieceColor turn_color, enum PieceColor ai
         best_score = -10000;
 
         for (i = 0; i < count; i++){
-            struct GameState temp_gs = *gs;
+            struct GameState temp_gs = copy_of_board(gs);
             apply_move(&temp_gs, moves[i]);
 
             int temp_score = minimax(&temp_gs, next_color, ai_color, depth - 1);
@@ -170,13 +170,14 @@ int minimax(struct GameState *gs, enum PieceColor turn_color, enum PieceColor ai
             if (temp_score > best_score){
                 best_score = temp_score;
             }
+            clear_board_copy(&temp_gs);
         }
     }
     else{
         best_score = 10000;
 
         for (i = 0; i < count; i++){
-            struct GameState temp_gs = *gs;
+            struct GameState temp_gs = copy_of_board(gs);
             apply_move(&temp_gs, moves[i]);
 
             int temp_score = minimax(&temp_gs, next_color, ai_color, depth - 1);
@@ -184,6 +185,7 @@ int minimax(struct GameState *gs, enum PieceColor turn_color, enum PieceColor ai
             if (temp_score < best_score){
                 best_score = temp_score;
             }
+            clear_board_copy(&temp_gs);
         }
     }
 

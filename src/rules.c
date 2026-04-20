@@ -38,7 +38,7 @@ static int is_path_clear(struct GameState *gs, struct Pos from, struct Pos to)
 }//end of is_path_clear FUNCTION
 
 //create a copy of the current board (checking moves without disturbing the actual game)
-static struct GameState copy_of_board(struct GameState *gs)
+struct GameState copy_of_board(struct GameState *gs)
 {
 	struct GameState copy = *gs;
 	for (int r = 0; r < NUM_RANKS; r++) //loops for every RANK (MAX: 8)
@@ -63,7 +63,7 @@ static struct GameState copy_of_board(struct GameState *gs)
 }//end of copy_of_board function
 
 //clears the allocated memory
-static void clear_board_copy(struct GameState *copy)
+void clear_board_copy(struct GameState *copy)
 {
 	for (int r = 0; r < NUM_RANKS; r++) //loops for the # of RANKS (8)
 	{

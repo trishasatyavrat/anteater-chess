@@ -263,7 +263,6 @@ static int any_moves_left(struct GameState *gs, enum PieceColor color)
 	//For the calling order in MAIN.c
 	//Variable for the ACTUALL current turn
 	enum PieceColor actual_turn = gs->current_turn;
-	gs->current_turn = color;
 	//Looks for POSITIONS throughout the entire board with the current player's piece on it
 	for(int fr = 0; fr < NUM_RANKS; fr++)
 	{
@@ -280,7 +279,7 @@ static int any_moves_left(struct GameState *gs, enum PieceColor color)
 						struct Move m; //variable to test possibilities
 						m.from = make_pos(fr,ff);
 						m.to = make_pos(tr,tf);
-						if(is_legal_move(gs,m))
+						if(is_legal_move(gs,m)) 
 						{
 							gs->current_turn = actual_turn; 
 							return 1;
@@ -306,16 +305,18 @@ int king_in_stalemate(struct GameState *gs, enum PieceColor color)
 	return !any_moves_left(gs, color);
 }//end of king_in_stalemate FUNCTION
 
-//TEMP LegalMoves_Function for AI Module:
+//LegalMoves_Function for AI Module:
 void legalmoves_function(struct GameState *gs, struct Pos position, struct Move *out, int *count)
 {
-    *count = 0;
+    *count = 0; //initialize count = 0
 
+	//LookUP the piece at a given position
     struct Piece *p = lookup_piece(gs->board, position);
-    if (!p || p->color != gs->current_turn) {
+    if (!p || p->color != gs->current_turn) 
+	{ //if the position is EMPTY or has another opponents PIECE then function will NOT execute
         return;
     }
-
+	//Loops the entire BOARD
     for (int tr = 0; tr < NUM_RANKS; tr++)
     {
         for (int tf = 0; tf < NUM_FILES; tf++)
@@ -326,12 +327,11 @@ void legalmoves_function(struct GameState *gs, struct Pos position, struct Move 
 
             if (is_legal_move(gs, m))
             {
-                out[*count] = m;
-                (*count)++;
+                out[*count] = m; //Move is saved into the array
+                (*count)++; //counter is INCREMENTED
             }
         }
     }
 }
-
 
 

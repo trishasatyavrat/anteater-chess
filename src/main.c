@@ -59,6 +59,7 @@ int main(void) {
     init_game(&gs);
 
     /*
+   ADD:
     int level;
 
     printf("Choose difficulty (1 = Beginner, 2 = Intermediate, 3 = Expert): ");
@@ -95,7 +96,7 @@ int main(void) {
             gs.current_turn = BLACK;
         } else {
             printf("\nComputer is thinking...\n");
-            struct Move m = bestmove_function(&gs, BLACK, 1);
+            struct Move m = bestmove_function(&gs, BLACK, 1); //change to bestmove_function(&gs, BLACK, get_ai_depth())
             apply_move(&gs, m);
             logfile_function(m, gs.history.count, BLACK, "chess_log.txt");
             display_board(gs.board);

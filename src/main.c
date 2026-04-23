@@ -57,6 +57,17 @@ int main(void) {
     }
 
     init_game(&gs);
+
+    /*
+    int level;
+
+    printf("Choose difficulty (1 = Beginner, 2 = Intermediate, 3 = Expert): ");
+    fgets(input, sizeof(input), stdin);
+    level = atoi(input);
+    difficultyselect_function(level);
+    
+    */
+    
     display_board(gs.board);
 
     printf("You are playing as White.\n");

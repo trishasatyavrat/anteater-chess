@@ -76,7 +76,6 @@ int main(void) {
             if (king_in_check(&gs, BLACK))
             {
                     printf("Your KING is in CHECK! \n");
-                    break;
             }
             if (king_in_checkmate(&gs, BLACK)) {
                 printf("Checkmate! White wins!\n");
@@ -96,7 +95,6 @@ int main(void) {
             if (king_in_check(&gs, WHITE))
             {
                     printf("Your KING is in CHECK! \n");
-                    break;
             }
             if (king_in_checkmate(&gs, WHITE)) {
                 printf("Checkmate! Black wins!\n");

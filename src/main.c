@@ -73,6 +73,11 @@ int main(void) {
             apply_move(&gs, m);
             logfile_function(m, gs.history.count, WHITE, "chess_log.txt");
             display_board(gs.board);
+            if (king_in_check(&gs, BLACK))
+            {
+                    printf("Your KING is in CHECK! \n");
+                    break;
+            }
             if (king_in_checkmate(&gs, BLACK)) {
                 printf("Checkmate! White wins!\n");
                 break;
@@ -88,6 +93,11 @@ int main(void) {
             apply_move(&gs, m);
             logfile_function(m, gs.history.count, BLACK, "chess_log.txt");
             display_board(gs.board);
+            if (king_in_check(&gs, WHITE))
+            {
+                    printf("Your KING is in CHECK! \n");
+                    break;
+            }
             if (king_in_checkmate(&gs, WHITE)) {
                 printf("Checkmate! Black wins!\n");
                 break;

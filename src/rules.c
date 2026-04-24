@@ -146,9 +146,44 @@ int possible_moves(struct GameState *gs, struct Move m)
 				return 0; //return 0 if move NOT possible
 			}//end of PAWN case
 		case ANTEATER:
-			if(adr > 1 || adf > 1) return 0; //Moves like a KING
-			if(target && target->type != PAWN) return 0; //can ONLY capture ANTS (PAWNS)
-			return 1;
+			// First, check if the move is a valid line (Straight or Diagonal)
+            if (adr == adf || dis_moved_r == 0 || dis_moved_f == 0)
+            {
+                // 1. Handling the 1-square move (Standard King-like move)
+                if (adr <= 1 && adf <= 1)
+                {
+                        if (target && target->type != PAWN) return 0; // Can only capture pawns
+                        return 1;
+                }
+
+                // 2. Handling the Multi-square "Row Eating" move
+                int dir_r = is_step(m.from.r, m.to.r);
+                int dir_f = is_step(m.from.f, m.to.f);
+
+                int r = m.from.r + dir_r;
+                int f = m.from.f + dir_f;
+
+                // 1. Path Check: Every square BEFORE the destination must be a PAWN
+                while (r != m.to.r || f != m.to.f)
+                {
+                        struct Piece *path_p = gs->board[r][f];
+                        if (!path_p || path_p->type != PAWN || path_p->color == p->color)
+                        {
+                                    return 0;
+                        }
+                        r += dir_r;
+                        f += dir_f;
+                }
+
+                // 2. Destination Check: Must be an OPPONENT PAWN (No empty squares allowed)
+                if (!target || target->type != PAWN || target->color == p->color)
+                {
+                    return 0; // Move is illegal if landing on empty space or non-pawn
+                }
+
+                return 1;
+            }
+            return 0;
 		case KNIGHT: //L-shape move
 			if((adr == 2 && adf == 1) || (adr == 1 && adf == 2))
 			{

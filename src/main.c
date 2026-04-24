@@ -58,8 +58,7 @@ int main(void) {
 
     init_game(&gs);
 
-    /*
-   ADD:
+    
     int level;
 
     printf("Choose difficulty (1 = Beginner, 2 = Intermediate, 3 = Expert): ");
@@ -72,7 +71,7 @@ int main(void) {
     
     difficultyselect_function(level);
     
-    */
+    
     
     display_board(gs.board);
 

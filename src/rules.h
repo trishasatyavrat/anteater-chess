@@ -23,7 +23,7 @@ int possible_moves(struct GameState *gs, struct Move m);
 int is_legal_move(struct GameState *gs, struct Move m);
 
 //Function for AI module (Extra parameters)
-void legalmoves_function(struct GameState *gs, struct Pos position, struct Move *out, int *count)
+void legalmoves_function(struct GameState *gs, struct Pos position, struct Move *out, int *count);
 
 //Is the King in Checkmate?
 int king_in_checkmate(struct GameState *gs, enum PieceColor color);

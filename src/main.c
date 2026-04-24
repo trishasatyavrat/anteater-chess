@@ -65,6 +65,11 @@ int main(void) {
     printf("Choose difficulty (1 = Beginner, 2 = Intermediate, 3 = Expert): ");
     fgets(input, sizeof(input), stdin);
     level = atoi(input);
+
+    if (level < 1 || level > 3){
+    level = 1;
+}
+    
     difficultyselect_function(level);
     
     */

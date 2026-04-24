@@ -276,3 +276,44 @@ int handle_capture(struct GameState *gs, struct Pos to)
     }
     return 0;
 }
+
+void apply_move(struct GameState *gs, struct Move m) {
+    struct Piece *p = lookup_piece(gs->board, m.from);
+    if (!p) return;
+
+    int move_handled = 0;
+
+    //SPECIAL MOVES:
+    if (p->type == ANTEATER) {
+        move_handled = handle_anteater(gs, m.from, m.to);
+    }
+    else if (p->type == PAWN) {
+        move_handled = handle_en_passant(gs, m.from, m.to);
+    }
+    else if (p->type == KING && abs(m.to.f - m.from.f) >= 2) {
+        castling_function(gs, &m);
+        move_handled = 1;
+    }
+
+    // 2. BASIC MOVES
+    if (!move_handled) {
+        struct Piece *target = lookup_piece(gs->board, m.to);
+        if (target) free(target);
+
+        assign_piece(gs->board, p, m.to);
+        assign_piece(gs->board, NULL, m.from);
+    }
+
+    //PROMOTION:
+    if (p->type == PAWN) {
+        handle_promotion(gs, m.to);
+    }
+
+    //Update En_passant Status
+    if (p->type == PAWN && abs(m.to.r - m.from.r) == 2) {
+        gs->en_passant_target = make_pos((m.from.r + m.to.r) / 2, m.from.f);
+    } else {
+        gs->en_passant_target = make_pos(-1, -1);
+    }
+}
+

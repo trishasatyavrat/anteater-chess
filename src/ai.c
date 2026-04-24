@@ -1,6 +1,49 @@
 #include "ai.h"
 #include "rules.h"
 
+int ai_depth = 1;
+
+int piece_value(enum PieceType type){
+    if (type == PAWN){
+        return 1;
+    }
+    if (type == KNIGHT){
+        return 3;
+    }
+    if (type == BISHOP){
+        return 3;
+    }
+    if (type == ROOK){
+        return 5;
+    }
+    if (type == QUEEN){
+        return 9;
+    }
+    if (type == ANTEATER){
+        return 2;
+    }
+    if (type == KING){
+        return 0;
+    }
+    return 0;
+}
+
+void difficultyselect_function(int level){
+    if (level == 1){
+        ai_depth = 1;
+    }
+    else if (level == 2){
+        ai_depth = 3;
+    }
+    else{
+        ai_depth = 5;
+    }
+}
+
+int get_ai_depth(void){
+    return ai_depth;
+}
+
 struct Move bestmove_function(struct GameState *gs, enum PieceColor color, int depth){
     struct Move moves[512]; //stores moves
     int count = 0;
@@ -33,7 +76,7 @@ struct Move bestmove_function(struct GameState *gs, enum PieceColor color, int d
     int i;
     for (i=0; i < count; i++){
 
-        struct GameState temp_gs = *gs;
+        struct GameState temp_gs = copy_of_board(gs);
         apply_move(&temp_gs, moves[i]);
         
         enum PieceColor next_color;
@@ -44,7 +87,7 @@ struct Move bestmove_function(struct GameState *gs, enum PieceColor color, int d
             next_color = WHITE;
         }
         
-        int temp_score = minimax(&temp_gs, next_color, color, depth - 1);
+        int temp_score = minimax(&temp_gs, next_color, color, depth - 1, -10000, 10000); //Set bounds for alpha and beta
 
       
 
@@ -55,7 +98,7 @@ struct Move bestmove_function(struct GameState *gs, enum PieceColor color, int d
 
        }
 
-
+       clear_board_copy(&temp_gs);
 
 
     }
@@ -116,11 +159,14 @@ struct Move bestmove_function(struct GameState *gs, enum PieceColor color, int d
                 if (gs->board[r][f] == NULL){
                     continue;
                 }
+
+                int value = piece_value(gs->board[r][f]->type);
+
                 if (gs->board[r][f]->color != color){
-                    score = score - 1;
+                    score = score - value;
                 }
                 if (gs->board[r][f]->color == color){
-                    score = score + 1;
+                    score = score + value;
                 }
           
         }
@@ -130,7 +176,7 @@ struct Move bestmove_function(struct GameState *gs, enum PieceColor color, int d
 }
 
 
-int minimax(struct GameState *gs, enum PieceColor turn_color, enum PieceColor ai_color, int depth){
+int minimax(struct GameState *gs, enum PieceColor turn_color, enum PieceColor ai_color, int depth, int alpha, int beta){
     if (depth <= 0){
     return scan_board(gs, ai_color);
     }   
@@ -165,12 +211,22 @@ int minimax(struct GameState *gs, enum PieceColor turn_color, enum PieceColor ai
             struct GameState temp_gs = copy_of_board(gs);
             apply_move(&temp_gs, moves[i]);
 
-            int temp_score = minimax(&temp_gs, next_color, ai_color, depth - 1);
+            int temp_score = minimax(&temp_gs, next_color, ai_color, depth - 1, alpha, beta);
 
             if (temp_score > best_score){
                 best_score = temp_score;
             }
+
+            if (best_score > alpha){
+                alpha = best_score;
+            }
+
             clear_board_copy(&temp_gs);
+
+            if (alpha >= beta){
+                break;
+            }
+
         }
     }
     else{
@@ -180,12 +236,22 @@ int minimax(struct GameState *gs, enum PieceColor turn_color, enum PieceColor ai
             struct GameState temp_gs = copy_of_board(gs);
             apply_move(&temp_gs, moves[i]);
 
-            int temp_score = minimax(&temp_gs, next_color, ai_color, depth - 1);
+            int temp_score = minimax(&temp_gs, next_color, ai_color, depth - 1, alpha, beta);
 
             if (temp_score < best_score){
                 best_score = temp_score;
             }
+
+            if (best_score < beta){
+                beta = best_score;
+            }
+
             clear_board_copy(&temp_gs);
+
+            if (alpha >= beta){
+                break;
+            }
+
         }
     }
 

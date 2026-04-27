@@ -5,4 +5,5 @@
 int save(struct GameState *gs, const char *filename);
 int load(struct GameState *gs, const char *filename);
 
+void list_saves();
 #endif

@@ -146,43 +146,55 @@ int possible_moves(struct GameState *gs, struct Move m)
 				return 0; //return 0 if move NOT possible
 			}//end of PAWN case
 		case ANTEATER:
-			// First, check if the move is a valid line (Straight or Diagonal)
-            if (adr == adf || dis_moved_r == 0 || dis_moved_f == 0)
-            {
-                // 1. Handling the 1-square move (Standard King-like move)
-                if (adr <= 1 && adf <= 1)
-                {
-                        if (target && target->type != PAWN) return 0; // Can only capture pawns
-                        return 1;
-                }
+			{
 
-                // 2. Handling the Multi-square "Row Eating" move
-                int dir_r = is_step(m.from.r, m.to.r);
-                int dir_f = is_step(m.from.f, m.to.f);
+    if (adr <= 1 && adf <= 1) {
+        if (target && target->type != PAWN) return 0;
+        return 1;
+    }
 
-                int r = m.from.r + dir_r;
-                int f = m.from.f + dir_f;
+    
+    int dist[NUM_RANKS][NUM_FILES];
+    for (int r = 0; r < NUM_RANKS; r++)
+        for (int f = 0; f < NUM_FILES; f++)
+            dist[r][f] = -1;
 
-                // 1. Path Check: Every square BEFORE the destination must be a PAWN
-                while (r != m.to.r || f != m.to.f)
-                {
-                        struct Piece *path_p = gs->board[r][f];
-                        if (!path_p || path_p->type != PAWN || path_p->color == p->color)
-                        {
-                                    return 0;
+    dist[m.from.r][m.from.f] = 0;
+    int changed = 1;
+    int current_d = 0;
+
+    int d_ortho[4][2] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+    int d_all[8][2] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}, {-1, -1}, {-1, 1}, {1, -1}, {1, 1}};
+
+    while (changed && dist[m.to.r][m.to.f] == -1) {
+        changed = 0;
+        for (int r = 0; r < NUM_RANKS; r++) {
+            for (int f = 0; f < NUM_FILES; f++) {
+                if (dist[r][f] == current_d) {
+                    int dirs = (current_d == 0) ? 8 : 4;
+
+                    for (int i = 0; i < dirs; i++) {
+                        int nr = r + (current_d == 0 ? d_all[i][0] : d_ortho[i][0]);
+                        int nf = f + (current_d == 0 ? d_all[i][1] : d_ortho[i][1]);
+
+                        if (pos_valid(make_pos(nr, nf)) && dist[nr][nf] == -1) {
+                            struct Piece *path_p = gs->board[nr][nf];
+                           
+                            if (path_p && path_p->type == PAWN && path_p->color != p->color) {
+                                dist[nr][nf] = current_d + 1;
+                                changed = 1;
+                            }
                         }
-                        r += dir_r;
-                        f += dir_f;
+                    }
                 }
-
-                // 2. Destination Check: Must be an OPPONENT PAWN (No empty squares allowed)
-                if (!target || target->type != PAWN || target->color == p->color)
-                {
-                    return 0; // Move is illegal if landing on empty space or non-pawn
-                }
-
-                return 1;
             }
+        }
+        current_d++;
+    }
+
+    return (dist[m.to.r][m.to.f] != -1);
+}
+
             return 0;
 		case KNIGHT: //L-shape move
 			if((adr == 2 && adf == 1) || (adr == 1 && adf == 2))

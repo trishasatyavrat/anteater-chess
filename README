@@ -1,0 +1,11 @@
+Anteater Chess V1.0
+Team 3 The Knight Owls
+EECS 22L, Spring 2026
+
+Authors: Akshithi Suresh, Jolynn Quang, Jasmine Kong, Troy Reindl, Ayda Ahmadian,Trisha Satyavrat
+
+This is the final release of Anteater Chess, a customized chess program
+where a human player can play against the computer or another human.
+
+To install, type "make". For detailed instructions, refer to INSTALL.
+For usage instructions, refer to doc/Chess_UserManual.pdf.

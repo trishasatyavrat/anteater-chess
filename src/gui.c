@@ -507,6 +507,7 @@ static int try_move(struct GameState *gs, struct Pos from, struct Pos to,
     }
 
     apply_move(gs, m);
+    gs->current_turn = OPPONENT(human_color);
     logfile_function(m, gs->history.count, human_color, "chess_log.txt");
     log_append(m, human_color, gs->history.count);
 
@@ -558,8 +559,8 @@ static void do_computer_move(struct GameState *gs,
     snprintf(g_status, sizeof(g_status), "Computer is thinking...");
     render_frame(gs);
 
+    gs->current_turn = comp_color;  /* bestmove_function needs this set */
     struct Move m = bestmove_function(gs, comp_color, ai_depth);
-
     struct Piece *moving = gs->board[m.from.r][m.from.f];
     if (moving && moving->type == PAWN) {
         int last_rank = (comp_color == WHITE) ? (NUM_RANKS - 1) : 0;
@@ -737,11 +738,12 @@ GuiResult gui_run(struct GameState *gs, enum PieceColor human_color,
 
         /* ── Computer move ────────────────────────────────────────── */
         if (!game_over && gs->current_turn == comp_color) {
-            SDL_Delay(300);  /* small pause so human sees their move */
+            SDL_Delay(300);
             do_computer_move(gs, comp_color, ai_depth);
+            gs->current_turn = human_color;  /* force turn back to human */
             g_sel_active  = 0;
             g_legal_count = 0;
-            render_frame(gs);  /* immediately show computer's move */
+            render_frame(gs);
         }
 
         SDL_Delay(8);

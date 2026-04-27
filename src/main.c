@@ -105,6 +105,7 @@ int main(void) {
                 continue;
             }
             apply_move(&gs, m);
+            gs.current_turn = BLACK;
             logfile_function(m, gs.history.count, WHITE, "chess_log.txt");
             display_board(gs.board);
             if (king_in_checkmate(&gs, BLACK)) {
@@ -115,11 +116,11 @@ int main(void) {
                 printf("Stalemate! Draw!\n");
                 break;
             }
-            gs.current_turn = BLACK;
         } else {
             printf("\nComputer is thinking...\n");
             struct Move m = bestmove_function(&gs, BLACK, get_ai_depth()); 
             apply_move(&gs, m);
+            gs.current_turn = WHITE;
             logfile_function(m, gs.history.count, BLACK, "chess_log.txt");
             display_board(gs.board);
             if (king_in_checkmate(&gs, WHITE)) {
@@ -130,7 +131,6 @@ int main(void) {
                 printf("Stalemate! Draw!\n");
                 break;
             }
-            gs.current_turn = WHITE;
         }
     }
     return 0;

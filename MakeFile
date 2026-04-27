@@ -17,13 +17,13 @@ ifeq ($(TEXT_ONLY),1)
 else
     SDL_CF := $(shell sdl2-config --cflags 2>/dev/null)
     SDL_LF := $(shell sdl2-config --libs   2>/dev/null)
-    CFLAGS += $(SDL_CF)
-    LDFLAGS = $(SDL_LF) -lm
+    CFLAGS  += $(SDL_CF) -I/opt/homebrew/include
+    LDFLAGS  = $(SDL_LF) -L/opt/homebrew/lib -lSDL2_ttf -lm
 endif
 
 SRCDIR  = src
 BINDIR  = bin
-TESTDIR = test
+TESTDIR = src/test
 
 SRCS = \
     $(SRCDIR)/board.c  \
@@ -32,6 +32,10 @@ SRCS = \
     $(SRCDIR)/fileio.c \
     $(SRCDIR)/ai.c     \
     $(SRCDIR)/main.c
+
+ifneq ($(TEXT_ONLY),1)
+    SRCS += $(SRCDIR)/gui.c
+endif
 
 OBJS   = $(SRCS:.c=.o)
 TARGET = $(BINDIR)/chess
@@ -51,10 +55,14 @@ $(SRCDIR)/%.o: $(SRCDIR)/%.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 # ── Tests ─────────────────────────────────────────────────────────
-TEST_BD = $(BINDIR)/test_boarddisplay
-TEST_RC = $(BINDIR)/test_rulecheck
+TEST_BD  = $(BINDIR)/test_boarddisplay
+TEST_RC  = $(BINDIR)/test_rulecheck
+TEST_INT = $(BINDIR)/test_integration
+TEST_CFLAGS = -Wall -Wextra -std=c99 -g -Isrc -DTEXT_ONLY
+TEST_LINK   = $(SRCDIR)/board.c $(SRCDIR)/move.c \
+              $(SRCDIR)/rules.c $(SRCDIR)/fileio.c $(SRCDIR)/ai.c
 
-test: $(BINDIR) $(TEST_BD) $(TEST_RC)
+test: $(BINDIR) $(TEST_BD) $(TEST_RC) $(TEST_INT)
 	@echo ""
 	@echo "--- test_boarddisplay ---"
 	./$(TEST_BD)
@@ -62,7 +70,14 @@ test: $(BINDIR) $(TEST_BD) $(TEST_RC)
 	@echo "--- test_rulecheck ---"
 	./$(TEST_RC)
 	@echo ""
+	@echo "--- test_integration ---"
+	./$(TEST_INT)
+	@echo ""
 	@echo "All tests complete."
+
+$(TEST_INT): $(TESTDIR)/test_integration.c $(TEST_LINK)
+	$(CC) $(TEST_CFLAGS) -o $@ $^ -lm
+	@echo "Built: $@"
 
 $(TEST_BD): $(TESTDIR)/test_boarddisplay.c \
             $(SRCDIR)/board.c $(SRCDIR)/move.c \
@@ -81,7 +96,8 @@ clean:
 	rm -f $(SRCDIR)/*.o
 	rm -f $(BINDIR)/chess \
 	      $(BINDIR)/test_boarddisplay \
-	      $(BINDIR)/test_rulecheck
+	      $(BINDIR)/test_rulecheck \
+	      $(BINDIR)/test_integration
 	@echo "Clean done."
 
 # ── Package ───────────────────────────────────────────────────────

@@ -5,6 +5,9 @@
 #include "fileio.h"
 #include "rules.h"
 #include "ai.h"
+#ifndef TEXT_ONLY
+#include "gui.h"
+#endif
 
 void show_main_menu(void) {
     printf("\n========================================\n");
@@ -56,6 +59,7 @@ int main(void) {
         return 0;
     }
 
+    memset(&gs, 0, sizeof(gs));
     init_game(&gs);
 
     
@@ -73,6 +77,16 @@ int main(void) {
     
     
     
+    #ifndef TEXT_ONLY
+        enum PieceColor human_color = WHITE;
+        if (gui_init() == 0) {
+            gui_run(&gs, human_color, get_ai_depth());
+            gui_shutdown();
+            return 0;
+        }
+        fprintf(stderr, "GUI failed, falling back to text mode.\n");
+    #endif
+
     display_board(gs.board);
 
     printf("You are playing as White.\n");

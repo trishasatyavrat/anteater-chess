@@ -205,45 +205,77 @@ int handle_anteater(struct GameState *gs, struct Pos from, struct Pos to)
     if (!p || p->type != ANTEATER)
         return 0;
 
-    int dr = to.r - from.r;
-    int df = to.f - from.f;
+    int dist[NUM_RANKS][NUM_FILES];
+    for (int r = 0; r < NUM_RANKS; r++)
+        for (int f = 0; f < NUM_FILES; f++)
+            dist[r][f] = -1;
 
-    // moves straight/dia
-    if (dr != 0) dr = dr / abs(dr);
-    if (df != 0) df = df / abs(df);
+    dist[from.r][from.f] = 0;
+    int changed = 1;
+    int current_d = 0;
 
-    int r = from.r + dr;
-    int f = from.f + df;
+    // The Secret Sauce: 4-way (Orthogonal) vs 8-way (All)
+    int d_ortho[4][2] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+    int d_all[8][2] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}, {-1, -1}, {-1, 1}, {1, -1}, {1, 1}};
 
-    int ate = 0;
+    while (changed && dist[to.r][to.f] == -1) {
+        changed = 0;
+        for (int r = 0; r < NUM_RANKS; r++) {
+            for (int f = 0; f < NUM_FILES; f++) {
+                if (dist[r][f] == current_d) {
 
-    while (pos_valid(make_pos(r, f))) {
-        struct Piece *target = gs->board[r][f];
+                    int dirs = (current_d == 0) ? 8 : 4;
 
-        if (target && target->type == PAWN) {
-            free(target);
-            gs->board[r][f] = NULL;
-            ate = 1;
+                    for (int i = 0; i < dirs; i++) {
+                        int nr = r + (current_d == 0 ? d_all[i][0] : d_ortho[i][0]);
+                        int nf = f + (current_d == 0 ? d_all[i][1] : d_ortho[i][1]);
 
-            if (r == to.r && f == to.f)
+                        if (pos_valid(make_pos(nr, nf)) && dist[nr][nf] == -1) {
+                            struct Piece *target = gs->board[nr][nf];
+
+                            if (target && target->type == PAWN && target->color != p->color) {
+                                dist[nr][nf] = current_d + 1;
+                                changed = 1;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        current_d++;
+    }
+
+    if (dist[to.r][to.f] == -1) return 0; 
+
+    struct Pos curr = to;
+    while (curr.r != from.r || curr.f != from.f) {
+        int d = dist[curr.r][curr.f];
+
+        // Eat the ant
+        free(gs->board[curr.r][curr.f]);
+        gs->board[curr.r][curr.f] = NULL;
+
+
+        int dirs = (d == 1) ? 8 : 4;
+        for (int i = 0; i < dirs; i++) {
+            int nr = curr.r + (d == 1 ? d_all[i][0] : d_ortho[i][0]);
+            int nf = curr.f + (d == 1 ? d_all[i][1] : d_ortho[i][1]);
+
+            if (pos_valid(make_pos(nr, nf)) && dist[nr][nf] == d - 1) {
+                curr = make_pos(nr, nf);
                 break;
-
-            r += dr;
-            f += df;
-        } else {
-            break;
+            }
         }
     }
 
-    if (!ate)
-        return 0;
-
-    //  anteater at end of board
-    assign_piece(gs->board, p, make_pos(r, f));
+    // anteater at end of board
+    assign_piece(gs->board, p, to);
     assign_piece(gs->board, NULL, from);
 
     return 1;
 }
+
+
 
 //SPECIAL MOVE: PROMOTION
 int handle_promotion(struct GameState *gs, struct Pos to)

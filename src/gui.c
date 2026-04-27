@@ -47,8 +47,8 @@ static int  g_log_count = 0;
 
 static char g_status[128] = "Anteater Chess — The Knight Owls";
 
-static const char *FONT_PATH_PIECE = "/System/Library/Fonts/Supplemental/Arial Unicode.ttf";
-static const char *FONT_PATH_LABEL = "/System/Library/Fonts/Helvetica.ttc";
+static const char *FONT_PATH_PIECE = "bin/unifont.otf";
+static const char *FONT_PATH_LABEL = "bin/DejaVuSans.ttf";
 
 /* ================================================================== *
  *  Unicode chess glyphs                                               *

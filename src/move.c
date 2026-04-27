@@ -200,41 +200,49 @@ assign_piece(gs->board, NULL, from);
 //SPECIAL MOVE: ANTEATING
 int handle_anteater(struct GameState *gs, struct Pos from, struct Pos to)
 {
+    //looks up the piece the player chooses
     struct Piece *p = lookup_piece(gs->board, from);
 
+    //if the PIECE is NULL(EMPTY) or NOT an ANTEATER then do not proceed with the function
     if (!p || p->type != ANTEATER)
         return 0;
 
+    //creates a 2D array to 'find' every ANT (PAWN)
     int dist[NUM_RANKS][NUM_FILES];
     for (int r = 0; r < NUM_RANKS; r++)
         for (int f = 0; f < NUM_FILES; f++)
-            dist[r][f] = -1;
+            dist[r][f] = -1; //initialize the board spaces to NULL
 
-    dist[from.r][from.f] = 0;
-    int changed = 1;
-    int current_d = 0;
+    dist[from.r][from.f] = 0; //sets distance of the ANTEATER to 0
+    int changed = 1; //new space with ANTs
+    int current_d = 0; //distance to desired space
 
-    // The Secret Sauce: 4-way (Orthogonal) vs 8-way (All)
+    //up, down, left, right
     int d_ortho[4][2] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+    //directions with diagonals
     int d_all[8][2] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}, {-1, -1}, {-1, 1}, {1, -1}, {1, 1}};
 
+    //loops to 'find' ANTS in the desired path
     while (changed && dist[to.r][to.f] == -1) {
         changed = 0;
         for (int r = 0; r < NUM_RANKS; r++) {
             for (int f = 0; f < NUM_FILES; f++) {
                 if (dist[r][f] == current_d) {
-
+                    //inital move
+                    //initially the PAWN can only move like a KING unless CAPTURING ANTS
                     int dirs = (current_d == 0) ? 8 : 4;
 
+                    //calculates coordinates of adjacent spaces
                     for (int i = 0; i < dirs; i++) {
                         int nr = r + (current_d == 0 ? d_all[i][0] : d_ortho[i][0]);
                         int nf = f + (current_d == 0 ? d_all[i][1] : d_ortho[i][1]);
 
                         if (pos_valid(make_pos(nr, nf)) && dist[nr][nf] == -1) {
-                            struct Piece *target = gs->board[nr][nf];
-
+                            struct Piece *target = gs->board[nr][nf]; //what's on the adjacent space
+                            
+                            //ANTEATER is only allowed to capture an OPPONENTS ANTS
                             if (target && target->type == PAWN && target->color != p->color) {
-                                dist[nr][nf] = current_d + 1;
+                                dist[nr][nf] = current_d + 1; //allows the ANTEATER to go there if desired
                                 changed = 1;
                             }
                         }
@@ -245,15 +253,16 @@ int handle_anteater(struct GameState *gs, struct Pos from, struct Pos to)
         current_d++;
     }
 
-    if (dist[to.r][to.f] == -1) return 0; 
+    if (dist[to.r][to.f] == -1) return 0; //makes sure the ANTEATER is moving to an ANT(PAWN)
 
     struct Pos curr = to;
+    //loops from the desired space to the starting position
     while (curr.r != from.r || curr.f != from.f) {
         int d = dist[curr.r][curr.f];
 
         // Eat the ant
-        free(gs->board[curr.r][curr.f]);
-        gs->board[curr.r][curr.f] = NULL;
+        free(gs->board[curr.r][curr.f]); //free the memory
+        gs->board[curr.r][curr.f] = NULL; //deletes the piece from the board
 
 
         int dirs = (d == 1) ? 8 : 4;
@@ -268,9 +277,9 @@ int handle_anteater(struct GameState *gs, struct Pos from, struct Pos to)
         }
     }
 
-    // anteater at end of board
-    assign_piece(gs->board, p, to);
-    assign_piece(gs->board, NULL, from);
+    
+    assign_piece(gs->board, p, to); //places the ANTEATER on the desired space
+    assign_piece(gs->board, NULL, from); //deletes the ANTEATER at the start
 
     return 1;
 }

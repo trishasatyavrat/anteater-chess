@@ -147,53 +147,64 @@ int possible_moves(struct GameState *gs, struct Move m)
 			}//end of PAWN case
 		case ANTEATER:
 			{
+				//moves like a KING
+    			if (adr <= 1 && adf <= 1) 
+				{
+       			if (target && target->type != PAWN) return 0; //ANTEATERS can only eat ANTS (Pawns)
+        		return 1; //return 1: the space is EMPTY or there's a PAWN
+    			}
+			//2D array to map out all of the ANTS
+    		int dist[NUM_RANKS][NUM_FILES];
+    		for (int r = 0; r < NUM_RANKS; r++)
+        	for (int f = 0; f < NUM_FILES; f++)
+            	dist[r][f] = -1; //marks the spaces 
 
-    if (adr <= 1 && adf <= 1) {
-        if (target && target->type != PAWN) return 0;
-        return 1;
-    }
+    		dist[m.from.r][m.from.f] = 0; //sets ANTEATER distance as 0
+    		int changed = 1; //keeps the LOOP running 
+    		int current_d = 0; //looks at adjacent spaces
 
-    
-    int dist[NUM_RANKS][NUM_FILES];
-    for (int r = 0; r < NUM_RANKS; r++)
-        for (int f = 0; f < NUM_FILES; f++)
-            dist[r][f] = -1;
+			//up, down, left, right
+    		int d_ortho[4][2] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+			//all directions including diagonally
+    		int d_all[8][2] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}, {-1, -1}, {-1, 1}, {1, -1}, {1, 1}};
 
-    dist[m.from.r][m.from.f] = 0;
-    int changed = 1;
-    int current_d = 0;
+    		while (changed && dist[m.to.r][m.to.f] == -1)
+			//loop ends when the desired space is reached
+			{
+        		changed = 0;
+        		for (int r = 0; r < NUM_RANKS; r++) 
+				{
+            		for (int f = 0; f < NUM_FILES; f++) 
+					{
+                		if (dist[r][f] == current_d) //search for adjacent ANT depending on the space that's looping
+						{
+                    		int dirs = (current_d == 0) ? 8 : 4;
+							//first move from ANTEATER = moves like a king
+							//next moves are restricted
+                    		for (int i = 0; i < dirs; i++) 
+							{
+                        		int nr = r + (current_d == 0 ? d_all[i][0] : d_ortho[i][0]);
+                        		int nf = f + (current_d == 0 ? d_all[i][1] : d_ortho[i][1]);
 
-    int d_ortho[4][2] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
-    int d_all[8][2] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}, {-1, -1}, {-1, 1}, {1, -1}, {1, 1}};
+                        		if (pos_valid(make_pos(nr, nf)) && dist[nr][nf] == -1) //keeps the ANTEATER on the BOARD
+								{
+                            		struct Piece *path_p = gs->board[nr][nf];
+                           			//can ONLY cpature OPPONENT ANTS
+                            		if (path_p && path_p->type == PAWN && path_p->color != p->color) 
+								{
+                                	dist[nr][nf] = current_d + 1; //make the SPACE that contains an ANT
+                                	changed = 1;
+                            	}
+                        		}
+                    		}
+                		}
+            		}
+        		}
+        		current_d++; //increments counter
+    		}
 
-    while (changed && dist[m.to.r][m.to.f] == -1) {
-        changed = 0;
-        for (int r = 0; r < NUM_RANKS; r++) {
-            for (int f = 0; f < NUM_FILES; f++) {
-                if (dist[r][f] == current_d) {
-                    int dirs = (current_d == 0) ? 8 : 4;
-
-                    for (int i = 0; i < dirs; i++) {
-                        int nr = r + (current_d == 0 ? d_all[i][0] : d_ortho[i][0]);
-                        int nf = f + (current_d == 0 ? d_all[i][1] : d_ortho[i][1]);
-
-                        if (pos_valid(make_pos(nr, nf)) && dist[nr][nf] == -1) {
-                            struct Piece *path_p = gs->board[nr][nf];
-                           
-                            if (path_p && path_p->type == PAWN && path_p->color != p->color) {
-                                dist[nr][nf] = current_d + 1;
-                                changed = 1;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        current_d++;
-    }
-
-    return (dist[m.to.r][m.to.f] != -1);
-}
+    		return (dist[m.to.r][m.to.f] != -1); //returns 1 if the move is LEGAL
+			}
 
             return 0;
 		case KNIGHT: //L-shape move

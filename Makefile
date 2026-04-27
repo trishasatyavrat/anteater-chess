@@ -1,0 +1,107 @@
+# Makefile — Anteater Chess
+# EECS 22L, Spring 2026 — Team 3 (The Knight Owls)
+#
+# Targets:
+#   make              — build ./bin/chess
+#   make test         — build and run test_boarddisplay + test_rulecheck
+#   make clean        — remove all build artifacts
+#   make tar          — create Chess_Alpha_src.tar.gz
+#   make TEXT_ONLY=1  — build without SDL2
+
+CC     = gcc
+CFLAGS = -Wall -Wextra -std=c99 -g -Isrc
+LDFLAGS = -lm
+
+ifeq ($(TEXT_ONLY),1)
+    CFLAGS += -DTEXT_ONLY
+else
+    SDL_CF := $(shell sdl2-config --cflags 2>/dev/null)
+    SDL_LF := $(shell sdl2-config --libs   2>/dev/null)
+    CFLAGS  += $(SDL_CF) -I/opt/homebrew/include
+    LDFLAGS  = $(SDL_LF) -L/opt/homebrew/lib -lSDL2_ttf -lm
+endif
+
+SRCDIR  = src
+BINDIR  = bin
+TESTDIR = src/test
+
+SRCS = \
+    $(SRCDIR)/board.c  \
+    $(SRCDIR)/move.c   \
+    $(SRCDIR)/rules.c  \
+    $(SRCDIR)/fileio.c \
+    $(SRCDIR)/ai.c     \
+    $(SRCDIR)/main.c
+
+ifneq ($(TEXT_ONLY),1)
+    SRCS += $(SRCDIR)/gui.c
+endif
+
+OBJS   = $(SRCS:.c=.o)
+TARGET = $(BINDIR)/chess
+
+.PHONY: all clean test tar
+
+all: $(BINDIR) $(TARGET)
+
+$(BINDIR):
+	mkdir -p $(BINDIR)
+
+$(TARGET): $(OBJS)
+	$(CC) -o $@ $^ $(LDFLAGS)
+	@echo "Built: $@"
+
+$(SRCDIR)/%.o: $(SRCDIR)/%.c
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+# ── Tests ─────────────────────────────────────────────────────────
+TEST_BD  = $(BINDIR)/test_boarddisplay
+TEST_RC  = $(BINDIR)/test_rulecheck
+TEST_INT = $(BINDIR)/test_integration
+TEST_CFLAGS = -Wall -Wextra -std=c99 -g -Isrc -DTEXT_ONLY
+TEST_LINK   = $(SRCDIR)/board.c $(SRCDIR)/move.c \
+              $(SRCDIR)/rules.c $(SRCDIR)/fileio.c $(SRCDIR)/ai.c
+
+test: $(BINDIR) $(TEST_BD) $(TEST_RC) $(TEST_INT)
+	@echo ""
+	@echo "--- test_boarddisplay ---"
+	./$(TEST_BD)
+	@echo ""
+	@echo "--- test_rulecheck ---"
+	./$(TEST_RC)
+	@echo ""
+	@echo "--- test_integration ---"
+	./$(TEST_INT)
+	@echo ""
+	@echo "All tests complete."
+
+$(TEST_INT): $(TESTDIR)/test_integration.c $(TEST_LINK)
+	$(CC) $(TEST_CFLAGS) -o $@ $^ -lm
+	@echo "Built: $@"
+
+$(TEST_BD): $(TESTDIR)/test_boarddisplay.c \
+            $(SRCDIR)/board.c $(SRCDIR)/move.c \
+            $(SRCDIR)/rules.c $(SRCDIR)/fileio.c $(SRCDIR)/ai.c
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+	@echo "Built: $@"
+
+$(TEST_RC): $(TESTDIR)/test_rulecheck.c \
+            $(SRCDIR)/board.c $(SRCDIR)/move.c \
+            $(SRCDIR)/rules.c $(SRCDIR)/fileio.c $(SRCDIR)/ai.c
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+	@echo "Built: $@"
+
+# ── Clean ─────────────────────────────────────────────────────────
+clean:
+	rm -f $(SRCDIR)/*.o
+	rm -f $(BINDIR)/chess \
+	      $(BINDIR)/test_boarddisplay \
+	      $(BINDIR)/test_rulecheck \
+	      $(BINDIR)/test_integration
+	@echo "Clean done."
+
+# ── Package ───────────────────────────────────────────────────────
+tar: clean
+	tar czf ../Chess_Alpha_src.tar.gz \
+	    README COPYRIGHT INSTALL Makefile src/ test/ doc/ bin/
+	@echo "Created Chess_Alpha_src.tar.gz"

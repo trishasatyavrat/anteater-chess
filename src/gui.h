@@ -69,6 +69,6 @@ void gui_shutdown(void);
  *   The human plays as `human_color`; the computer plays the other side.
  *   Returns GUI_QUIT when the window is closed or game ends.
  */
-GuiResult gui_run(struct GameState *gs, enum PieceColor human_color, int ai_depth);
+GuiResult gui_run(struct GameState *gs, enum PieceColor human_color, int ai_depth, int mode);
 
 #endif /* GUI_H */

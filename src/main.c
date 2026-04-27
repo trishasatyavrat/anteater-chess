@@ -78,9 +78,13 @@ int main(void) {
     
     
     #ifndef TEXT_ONLY
+        printf("Game mode: (1) Human vs Computer  (2) Human vs Human: ");
+        fgets(input, sizeof(input), stdin);
+        int mode = atoi(input);
+
         enum PieceColor human_color = WHITE;
         if (gui_init() == 0) {
-            gui_run(&gs, human_color, get_ai_depth());
+            gui_run(&gs, human_color, get_ai_depth(), mode);
             gui_shutdown();
             return 0;
         }
